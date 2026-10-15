@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="AI Math Workbench адаптирует математические задачи к трём уровням сложности.">
+  <title>AI Math Workbench — Differentiated Learning</title>
+  <style>
+    :root{--ink:#182230;--muted:#64748b;--line:#e2e8f0;--paper:#fff;--bg:#f5f7fb;--brand:#4f46e5;--brand2:#4338ca;--green:#047857;--amber:#92400e}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+    header{background:#fff;border-bottom:1px solid var(--line)}.wrap{max-width:1100px;margin:auto;padding:20px}
+    .head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}.brand{font-size:1.25rem;font-weight:800;color:var(--brand);margin:0}.tag{font-size:.82rem;color:var(--muted)}
+    main{display:grid;grid-template-columns:300px minmax(0,1fr);gap:20px;padding-top:24px;padding-bottom:32px}
+    .panel{background:var(--paper);border:1px solid var(--line);border-radius:18px;box-shadow:0 4px 20px #0f172a08;overflow:hidden}.side{padding:22px;height:max-content}.work{min-height:450px}
+    h2{font-size:1.1rem;margin:0 0 16px}label{display:block;font-size:.9rem;font-weight:650;margin:14px 0 6px}
+    select,textarea,input{width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:11px 12px;font:inherit;background:white;color:var(--ink)}
+    textarea{resize:vertical;min-height:100px}.btn{border:0;border-radius:10px;padding:11px 15px;font:inherit;font-weight:700;cursor:pointer;transition:.15s}.btn:disabled{opacity:.55;cursor:wait}.primary{background:var(--brand);color:white}.primary:hover{background:var(--brand2)}.secondary{background:#eef2ff;color:#3730a3}.wide{width:100%;margin-top:16px}
+    .hint{font-size:.82rem;color:var(--muted);margin:10px 0 0}.privacy{font-size:.78rem;color:var(--muted);margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
+    .tabs{display:flex;border-bottom:1px solid var(--line);background:#f8fafc}.tab{flex:1;padding:14px 8px;border:0;border-bottom:3px solid transparent;background:transparent;color:#64748b;font-weight:750;cursor:pointer}.tab[aria-selected=true]{background:white;color:var(--brand);border-bottom-color:var(--brand)}
+    .content{padding:24px}.empty{padding:55px 24px;text-align:center;color:var(--muted)}.eyebrow{font-size:.76rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:800;margin:0 0 8px}
+    .task{font-size:1.08rem;background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:16px;white-space:pre-wrap;overflow-wrap:anywhere}
+    .box{border-radius:12px;padding:16px;margin-top:18px}.hintbox{background:#fffbeb;border:1px solid #fde68a}.solutionbox{background:#eef2ff;border:1px solid #c7d2fe}.box button{background:none;border:0;padding:0;font:inherit;font-weight:750;cursor:pointer;color:inherit}.box .body{white-space:pre-wrap;margin-top:12px;padding-top:12px;border-top:1px solid #00000018}
+    .status{border-radius:10px;padding:12px;margin-top:14px;font-size:.9rem;white-space:pre-wrap}.status[hidden]{display:none}.status.info{background:#eff6ff;color:#1d4ed8}.status.ok{background:#ecfdf5;color:#065f46}.status.error{background:#fef2f2;color:#991b1b}
+    .meta{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 20px}.pill{border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:.78rem;color:var(--muted)}
+    footer{color:var(--muted);font-size:.8rem;padding:0 20px 26px;text-align:center}
+    @media(max-width:760px){main{grid-template-columns:1fr;padding-top:14px}.side{padding:18px}.content{padding:18px}.work{min-height:0}.tab{font-size:.84rem}.wrap{padding:16px}}
+  </style>
+</head>
+<body>
+<header><div class="wrap head"><div><p class="brand">📐 AI Math Workbench</p><div class="tag">One mathematical concept · Three learning pathways</div></div><span class="pill">Differentiated learning demo</span></div></header>
+<main class="wrap">
+  <aside class="panel side">
+    <h2>Build your learning task</h2>
+    <label for="topic">Math topic</label>
+    <select id="topic">
+      <option value="Quadratic equations">Algebra: Quadratic equations</option>
+      <option value="Pythagorean theorem">Geometry: Pythagorean theorem</option>
+      <option value="Derivatives">Calculus: Derivatives</option>
+    </select>
+    <label for="coreTask">Core task (optional)</label>
+    <textarea id="coreTask" placeholder="Example: Find the roots of x² − 5x + 6 = 0."></textarea>
+    <p class="hint">Leave blank and AI will create a suitable core task for the selected topic.</p>
+    <label for="language">Language</label>
+    <select id="language"><option value="English">English</option><option value="Russian">Русский</option></select>
+    <button class="btn primary wide" id="generate">✨ Generate 3 levels</button>
+    <div class="status info" id="status" role="status" aria-live="polite" hidden></div>
+    <p class="privacy">Your API key is kept on the server as an environment variable. Never paste it into this page or commit it to GitHub.</p>
+  </aside>
+  <section class="panel work" aria-label="Generated learning task">
+    <div class="tabs" role="tablist" aria-label="Difficulty level">
+      <button class="tab" role="tab" id="tab1" aria-selected="true" aria-controls="levelPanel" data-level="1">🟢 Foundation</button>
+      <button class="tab" role="tab" id="tab2" aria-selected="false" aria-controls="levelPanel" data-level="2">🟡 Standard</button>
+      <button class="tab" role="tab" id="tab3" aria-selected="false" aria-controls="levelPanel" data-level="3">🔴 Advanced</button>
+    </div>
+    <div class="empty" id="empty">Choose a topic and generate a task. The AI will create Foundation, Standard, and Advanced versions with tailored hints and worked solutions.</div>
+    <div class="content" id="levelPanel" role="tabpanel" aria-labelledby="tab1" hidden>
+      <div class="meta"><span class="pill" id="levelName">Foundation</span><span class="pill" id="levelGoal">Guided practice</span></div>
+      <p class="eyebrow">Problem</p><div class="task" id="problem"></div>
+      <div class="box hintbox"><button id="hintToggle" aria-expanded="false">💡 Show hint</button><div class="body" id="hint" hidden></div></div>
+      <div class="box solutionbox"><button id="solutionToggle" aria-expanded="false">🧩 Show worked solution</button><div class="body" id="solution" hidden></div></div>
+      <button class="btn secondary" id="copy">Copy this level</button>
+    </div>
+  </section>
+</main>
+<footer>AI Math Workbench · Educational prototype. Always verify AI-generated mathematics.</footer>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  let data = null, activeLevel = 1;
+  const levelInfo = {
+    1: {name:"Foundation", goal:"Scaffolded steps", hint:"Show a direct first step and a guiding question."},
+    2: {name:"Standard", goal:"Grade-level practice", hint:"Give a strategic hint without revealing the full answer."},
+    3: {name:"Advanced", goal:"Extension and reasoning", hint:"Encourage multi-step reasoning, proof, or real-world application."}
+  };
+  function status(message, type="info") {
+    $("status").hidden = false; $("status").className = "status " + type; $("status").textContent = message;
+  }
+  function setDisclosure(button, body, label, openLabel) {
+    const open = body.hidden;
+    body.hidden = !open; button.setAttribute("aria-expanded", String(open));
+    button.textContent = open ? openLabel : label;
+  }
+  $("hintToggle").addEventListener("click", () => setDisclosure($("hintToggle"), $("hint"), "💡 Show hint", "💡 Hide hint"));
+  $("solutionToggle").addEventListener("click", () => setDisclosure($("solutionToggle"), $("solution"), "🧩 Show worked solution", "🧩 Hide worked solution"));
+  document.querySelectorAll(".tab").forEach(btn => btn.addEventListener("click", () => {
+    activeLevel = Number(btn.dataset.level);
+    document.querySelectorAll(".tab").forEach(tab => tab.setAttribute("aria-selected", String(tab === btn)));
+    $("levelPanel").setAttribute("aria-labelledby", btn.id);
+    render();
+  }));
+  function render() {
+    if (!data) return;
+    const item = data["level" + activeLevel], info = levelInfo[activeLevel];
+    $("levelName").textContent = info.name; $("levelGoal").textContent = info.goal;
+    $("problem").textContent = item.problem; $("hint").textContent = item.hint; $("solution").textContent = item.solution;
+    $("hint").hidden = true; $("solution").hidden = true;
+    $("hintToggle").setAttribute("aria-expanded", "false"); $("solutionToggle").setAttribute("aria-expanded", "false");
+    $("hintToggle").textContent = "💡 Show hint"; $("solutionToggle").textContent = "🧩 Show worked solution";
+    $("empty").hidden = true; $("levelPanel").hidden = false;
+  }
+  $("generate").addEventListener("click", async () => {
+    const button = $("generate"); button.disabled = true; button.textContent = "Generating…";
+    status("Asking the AI to adapt the task to three learning levels…");
+    const topic = $("topic").value, coreTask = $("coreTask").value.trim(), language = $("language").value;
+    try {
+      const response = await fetch("/api/generate", {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({topic, coreTask, language})
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || `Request failed (${response.status}).`);
+      data = result.data;
+      for (const level of ["level1","level2","level3"]) {
+        if (!data?.[level] || !["problem","hint","solution"].every(k => typeof data[level][k] === "string" && data[level][k].trim())) {
+          throw new Error("The AI response was incomplete. Please try again.");
+        }
+      }
+      activeLevel = 1;
+      document.querySelectorAll(".tab").forEach(tab => tab.setAttribute("aria-selected", String(tab.dataset.level === "1")));
+      render(); status("All three levels are ready. Choose a level and reveal its hint or solution.", "ok");
+    } catch (error) {
+      status((error && error.message) || "Something went wrong. Check the deployment logs and try again.", "error");
+    } finally {
+      button.disabled = false; button.textContent = "✨ Generate 3 levels";
+    }
+  });
+  $("copy").addEventListener("click", async () => {
+    if (!data) return;
+    const item = data["level" + activeLevel];
+    const text = `${levelInfo[activeLevel].name}\nProblem: ${item.problem}\nHint: ${item.hint}\nSolution: ${item.solution}`;
+    try { await navigator.clipboard.writeText(text); status("Current level copied to clipboard.", "ok"); }
+    catch (_) { status("Clipboard access is unavailable in this browser. Select and copy the text manually.", "error"); }
+  });
+})();
+</script>
+</body>
+</html>

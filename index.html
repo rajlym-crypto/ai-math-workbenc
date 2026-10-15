@@ -39,12 +39,12 @@
     </select>
     <label for="coreTask">Core task (optional)</label>
     <textarea id="coreTask" placeholder="Example: Find the roots of x² − 5x + 6 = 0."></textarea>
-    <p class="hint">Leave blank and AI will create a suitable core task for the selected topic.</p>
+    <p class="hint">Choose a built-in task or enter your own task. This offline demo provides ready-made examples without an API key.</p>
     <label for="language">Language</label>
     <select id="language"><option value="English">English</option><option value="Russian">Русский</option></select>
     <button class="btn primary wide" id="generate">✨ Generate 3 levels</button>
     <div class="status info" id="status" role="status" aria-live="polite" hidden></div>
-    <p class="privacy">Your API key is kept on the server as an environment variable. Never paste it into this page or commit it to GitHub.</p>
+    <p class="privacy">Offline demo: no API key, external AI service, or server request is required.</p>
   </aside>
   <section class="panel work" aria-label="Generated learning task">
     <div class="tabs" role="tablist" aria-label="Difficulty level">
@@ -52,7 +52,7 @@
       <button class="tab" role="tab" id="tab2" aria-selected="false" aria-controls="levelPanel" data-level="2">🟡 Standard</button>
       <button class="tab" role="tab" id="tab3" aria-selected="false" aria-controls="levelPanel" data-level="3">🔴 Advanced</button>
     </div>
-    <div class="empty" id="empty">Choose a topic and generate a task. The AI will create Foundation, Standard, and Advanced versions with tailored hints and worked solutions.</div>
+    <div class="empty" id="empty">Choose a topic and generate three ready-made difficulty levels with hints and worked solutions. This demo works without an API key.</div>
     <div class="content" id="levelPanel" role="tabpanel" aria-labelledby="tab1" hidden>
       <div class="meta"><span class="pill" id="levelName">Foundation</span><span class="pill" id="levelGoal">Guided practice</span></div>
       <p class="eyebrow">Problem</p><div class="task" id="problem"></div>
@@ -62,7 +62,7 @@
     </div>
   </section>
 </main>
-<footer>AI Math Workbench · Educational prototype. Always verify AI-generated mathematics.</footer>
+<footer>Math Workbench · Offline educational prototype with prepared examples.</footer>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
@@ -98,31 +98,64 @@
     $("hintToggle").textContent = "💡 Show hint"; $("solutionToggle").textContent = "🧩 Show worked solution";
     $("empty").hidden = true; $("levelPanel").hidden = false;
   }
-  $("generate").addEventListener("click", async () => {
-    const button = $("generate"); button.disabled = true; button.textContent = "Generating…";
-    status("Asking the AI to adapt the task to three learning levels…");
-    const topic = $("topic").value, coreTask = $("coreTask").value.trim(), language = $("language").value;
-    try {
-      const response = await fetch("/api/generate", {
-        method:"POST", headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({topic, coreTask, language})
-      });
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(result.error || `Request failed (${response.status}).`);
-      data = result.data;
-      for (const level of ["level1","level2","level3"]) {
-        if (!data?.[level] || !["problem","hint","solution"].every(k => typeof data[level][k] === "string" && data[level][k].trim())) {
-          throw new Error("The AI response was incomplete. Please try again.");
-        }
-      }
-      activeLevel = 1;
-      document.querySelectorAll(".tab").forEach(tab => tab.setAttribute("aria-selected", String(tab.dataset.level === "1")));
-      render(); status("All three levels are ready. Choose a level and reveal its hint or solution.", "ok");
-    } catch (error) {
-      status((error && error.message) || "Something went wrong. Check the deployment logs and try again.", "error");
-    } finally {
-      button.disabled = false; button.textContent = "✨ Generate 3 levels";
+  const examples = {
+    "Quadratic equations": {
+      English: [
+        {problem:"Solve: x² − 5x + 6 = 0.",hint:"Find two numbers whose product is 6 and whose sum is −5.",solution:"Factor: (x − 2)(x − 3) = 0. Therefore x = 2 or x = 3."},
+        {problem:"Solve: 2x² − 7x + 3 = 0.",hint:"Try factoring the expression into two binomials.",solution:"2x² − 7x + 3 = (2x − 1)(x − 3). Thus x = 1/2 or x = 3."},
+        {problem:"A rectangle has area 48 cm². Its length is 2 cm more than its width. Find its dimensions.",hint:"Let the width be x. Then x(x + 2) = 48.",solution:"x² + 2x − 48 = 0. Factor: (x + 8)(x − 6) = 0. A length must be positive, so width = 6 cm and length = 8 cm."}
+      ],
+      Russian: [
+        {problem:"Решите уравнение: x² − 5x + 6 = 0.",hint:"Найдите два числа, произведение которых равно 6, а сумма — 5.",solution:"Разложим на множители: (x − 2)(x − 3) = 0. Поэтому x = 2 или x = 3."},
+        {problem:"Решите уравнение: 2x² − 7x + 3 = 0.",hint:"Попробуйте разложить выражение на два линейных множителя.",solution:"2x² − 7x + 3 = (2x − 1)(x − 3). Поэтому x = 1/2 или x = 3."},
+        {problem:"Площадь прямоугольника равна 48 см². Его длина на 2 см больше ширины. Найдите стороны.",hint:"Пусть ширина равна x. Тогда x(x + 2) = 48.",solution:"Получаем x² + 2x − 48 = 0, то есть (x + 8)(x − 6) = 0. Отрицательная длина не подходит. Ширина 6 см, длина 8 см."}
+      ]
+    },
+    "Pythagorean theorem": {
+      English: [
+        {problem:"A right triangle has legs 3 cm and 4 cm. Find the hypotenuse.",hint:"Use a² + b² = c².",solution:"c² = 3² + 4² = 9 + 16 = 25, so c = 5 cm."},
+        {problem:"A right triangle has hypotenuse 13 cm and one leg 5 cm. Find the other leg.",hint:"Subtract the square of the known leg from the square of the hypotenuse.",solution:"b² = 13² − 5² = 169 − 25 = 144. Therefore b = 12 cm."},
+        {problem:"A 10 m ladder rests against a wall. Its foot is 6 m from the wall. How high up the wall does it reach?",hint:"The ladder is the hypotenuse of a right triangle.",solution:"h² + 6² = 10², so h² = 100 − 36 = 64. Thus h = 8 m."}
+      ],
+      Russian: [
+        {problem:"Катеты прямоугольного треугольника равны 3 см и 4 см. Найдите гипотенузу.",hint:"Используйте формулу a² + b² = c².",solution:"c² = 3² + 4² = 9 + 16 = 25, значит c = 5 см."},
+        {problem:"Гипотенуза прямоугольного треугольника равна 13 см, один катет — 5 см. Найдите второй катет.",hint:"Из квадрата гипотенузы вычтите квадрат известного катета.",solution:"b² = 13² − 5² = 169 − 25 = 144. Значит, b = 12 см."},
+        {problem:"Лестница длиной 10 м стоит у стены. Её нижний конец находится в 6 м от стены. На какой высоте она касается стены?",hint:"Лестница — гипотенуза прямоугольного треугольника.",solution:"h² + 6² = 10², поэтому h² = 100 − 36 = 64. Следовательно, h = 8 м."}
+      ]
+    },
+    "Derivatives": {
+      English: [
+        {problem:"Find the derivative of f(x) = x².",hint:"Use the power rule: d(xⁿ)/dx = nxⁿ⁻¹.",solution:"f′(x) = 2x."},
+        {problem:"Find the derivative of f(x) = 3x² − 4x + 7.",hint:"Differentiate each term separately. The derivative of a constant is 0.",solution:"f′(x) = 6x − 4."},
+        {problem:"For f(x) = x² − 3x, find the tangent line at x = 2.",hint:"Find f′(x), then calculate the slope f′(2) and point (2, f(2)).",solution:"f′(x) = 2x − 3, so the slope is f′(2) = 1. Also f(2) = 4 − 6 = −2. Using y − y₀ = k(x − x₀): y + 2 = x − 2, hence y = x − 4."}
+      ],
+      Russian: [
+        {problem:"Найдите производную функции f(x) = x².",hint:"Используйте правило степени: d(xⁿ)/dx = nxⁿ⁻¹.",solution:"f′(x) = 2x."},
+        {problem:"Найдите производную функции f(x) = 3x² − 4x + 7.",hint:"Найдите производную каждого слагаемого отдельно. Производная константы равна 0.",solution:"f′(x) = 6x − 4."},
+        {problem:"Для f(x) = x² − 3x найдите уравнение касательной при x = 2.",hint:"Найдите f′(x), затем вычислите наклон f′(2) и точку (2, f(2)).",solution:"f′(x) = 2x − 3, поэтому наклон k = f′(2) = 1. f(2) = 4 − 6 = −2. По формуле y − y₀ = k(x − x₀): y + 2 = x − 2, значит y = x − 4."}
+      ]
     }
+  };
+  $("generate").addEventListener("click", () => {
+    const topic = $("topic").value, language = $("language").value;
+    const custom = $("coreTask").value.trim();
+    const examplesForTopic = examples[topic][language];
+    data = {};
+    examplesForTopic.forEach((item, i) => {
+      data["level" + (i + 1)] = {
+        problem: (i === 0 && custom) ? custom : item.problem,
+        hint: item.hint,
+        solution: (i === 0 && custom) ? (language === "Russian"
+          ? "Это пользовательская задача. Для этого офлайн-примера готовое решение автоматически не вычисляется. Используйте подсказку и проверьте ответ самостоятельно."
+          : "This is your custom task. In this offline demo, a solution is not calculated automatically. Use the hint and verify your answer independently.") : item.solution
+      };
+    });
+    activeLevel = 1;
+    document.querySelectorAll(".tab").forEach(tab => tab.setAttribute("aria-selected", String(tab.dataset.level === "1")));
+    render();
+    status(language === "Russian"
+      ? "Готово! Примеры работают офлайн — API-ключ не нужен."
+      : "Ready! These examples work offline—no API key is needed.", "ok");
   });
   $("copy").addEventListener("click", async () => {
     if (!data) return;
